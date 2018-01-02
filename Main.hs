@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 import Reflex
 import Reflex.Dom
 import Data.Text (Text, pack) 
@@ -23,14 +24,21 @@ toPoint angle = (cos angle,sin angle)
 
 finiteTicks :: MonadWidget t m => UTCTime ->Int -> m (Event t TickInfo)
 finiteTicks now limit = do
-  eTick0 <- tickLossy 0.01 now
+  eTick :: Event t TickInfo <- tickLossy 0.01 now
 
-  dCount <- count eTick0
-  dLimit <- holdUniqDyn $ fmap (limit<) dCount 
+  dCount :: Dynamic t Int <- count eTick
+  dLimit :: Dynamic t Bool <- holdUniqDyn $ fmap (limit<) dCount 
 
-  let eCountPastLimit = ffilter id (updated dLimit) 
+  let eLimit :: Event t Bool
+      eLimit = updated dLimit
+      
+      eCountPastLimit :: Event t Bool
+      eCountPastLimit = ffilter id eLimit
 
-  switchPromptly eTick0 $ never <$ eCountPastLimit
+      neverAfterLimit :: Event t (Event t TickInfo)
+      neverAfterLimit = never <$ eCountPastLimit
+
+  switchPromptly eTick neverAfterLimit
 
 addPoint :: Point -> Point -> Point
 addPoint (p0x, p0y) (p1x, p1y) = (p0x + p1x, p0y + p1y)
