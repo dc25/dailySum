@@ -1,11 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecursiveDo #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 import Reflex
 import Reflex.Dom
 import Data.Text (Text, pack) 
 import Data.Map (Map, fromList)
 import Data.Time.Clock (UTCTime, utctDay, getCurrentTime)
-import Data.Time.Calendar (Day, toGregorian)
+import Data.Time.Calendar (Day, toGregorian, addDays)
 import Control.Monad.Trans (liftIO)
 
 type Point = (Float,Float)
@@ -32,7 +33,7 @@ finiteTicks now limit = do
 addPoint :: Point -> Point -> Point
 addPoint (p0x, p0y) (p1x, p1y) = (p0x + p1x, p0y + p1y)
 
-newtype ChangeDate = DateChange Int
+newtype ChangeDate = DateChange Integer
 
 sumOfTheDay :: MonadWidget t m => (Int, Int, Int) -> m (Event t ChangeDate)
 sumOfTheDay (y,m,d) = do
@@ -96,11 +97,23 @@ sumOfDayWidget uDay = do
     el "h1" $ text "Exponential sum of the day"
     sumOfTheDay (y,m,d)
 
-
-main = mainWidget $ do 
+mainSumOfDayWidget :: forall t m. MonadWidget t m => m ()
+mainSumOfDayWidget = do
   now <- liftIO getCurrentTime 
-  _ <- sumOfDayWidget $ utctDay now
+  let today = utctDay now
+  rec 
+      dDay :: Dynamic t Day <- foldDyn (\(DateChange change) d -> addDays change d) today dayChange
+      let eDay :: Event t Day
+          eDay = updated dDay
+          eSum :: Event t (m (Event t ChangeDate))
+          eSum = fmap sumOfDayWidget eDay
+      dynSumEvent :: Dynamic t (Event t ChangeDate) <- widgetHold (sumOfDayWidget today) eSum
+      let dayChange :: Event t ChangeDate
+          dayChange = switch $ current dynSumEvent
   return ()
+
+
+main = mainWidget mainSumOfDayWidget
 
 -- The svg attributes needed to display a line segment.
 lineAttrs :: Float -> Segment -> Map Text Text
