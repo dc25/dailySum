@@ -73,7 +73,7 @@ sumOfTheDay (y,m,d) = do
 
   eLineMap <- tailE $ updated dLineMap
 
-  let sz = 500
+  let sz = 450
 
   let boardAttrs = 
         fromList [ ("width" , pack $ show sz)
