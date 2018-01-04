@@ -1,0 +1,13 @@
+button,h1,h2{
+    font-size:36px;
+    font-family:"Montserrat","Helvetica","Arial",sans-serif;
+    color:#393939;
+}
+
+button{
+    margin:10px
+}
+
+svg{
+    margin:36px
+}
