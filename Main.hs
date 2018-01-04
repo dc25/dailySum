@@ -4,6 +4,7 @@
 import Reflex
 import Reflex.Dom
 import Data.Text (Text, pack) 
+import Data.Monoid ((<>)) 
 import Data.Map (Map, fromList)
 import Data.Time.Clock (UTCTime, utctDay, getCurrentTime)
 import Data.Time.Calendar (Day, toGregorian, addDays)
@@ -72,9 +73,11 @@ sumOfTheDay (y,m,d) = do
 
   eLineMap <- tailE $ updated dLineMap
 
+  let sz = 500
+
   let boardAttrs = 
-        fromList [ ("width" , pack $ show 400)
-                 , ("height", pack $ show 400)
+        fromList [ ("width" , pack $ show sz)
+                 , ("height", pack $ show sz)
                  , ("viewBox", pack $ show xMin ++ " " ++ show yMin ++ " " ++ show width ++ " " ++ show height)
                  ]
   ev <- el "h2" $ do
