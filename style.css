@@ -1,13 +1,32 @@
-button,h1,h2{
+button,header,h2{
     font-size:36px;
-    font-family:"Montserrat","Helvetica","Arial",sans-serif;
-    color:#393939;
+}
+
+footer {
+    font-size:24px;
+}
+
+header,footer{
+    background-color:#DDDDDD;
+}
+
+article {
+    background-color:#EEEEEE;
 }
 
 button{
-    margin:10px
+    margin:10px;
 }
 
 svg{
-    margin:36px
+    margin:36px;
 }
+
+header {
+    text-align:center;
+}
+
+article {
+    text-align:center;
+}
+
