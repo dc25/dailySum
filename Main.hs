@@ -112,7 +112,7 @@ sumOfDayWidget = do
   now <- liftIO getCurrentTime 
   let today = utctDay now
   rec 
-      dDay <- foldDyn (\(change) d -> addDays change d) today dayChange
+      dDay <- foldDyn addDays today dayChange
       let eDay = updated dDay
           eSum = fmap sumOfDay eDay
           todaySum = sumOfDay today
