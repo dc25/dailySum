@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecursiveDo #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+
 import Reflex
 import Reflex.Dom
 import Data.Text (Text, pack) 
@@ -34,7 +34,7 @@ finiteTicks now limit = do
 addPoint :: Point -> Point -> Point
 addPoint (p0x, p0y) (p1x, p1y) = (p0x + p1x, p0y + p1y)
 
-newtype ChangeDate = DateChange Integer
+type ChangeDate = Integer
 
 sumOfTheDay :: MonadWidget t m => (Int, Int, Int) -> m (Event t ChangeDate)
 sumOfTheDay (y,m,d) = do
@@ -85,38 +85,44 @@ sumOfTheDay (y,m,d) = do
             text $ pack (show m ++ "/" ++ show d ++ "/" ++ show y)
             rightButton <- button ">>"
 
-            let prevEvent =  DateChange (-1) <$ leftButton 
-                nextEvent = DateChange 1 <$ rightButton 
+            let prevEvent =  (-1) <$ leftButton 
+                nextEvent = 1 <$ rightButton 
             return (leftmost [prevEvent, nextEvent])
 
   elSvgns "svg" (constDyn boardAttrs) (listHoldWithKey mempty eLineMap $ showLine (width/200.0))
   return ev
 
-sumOfDayWidget :: MonadWidget t m => Day -> m (Event t ChangeDate)
-sumOfDayWidget uDay = do
+sumOfDay :: MonadWidget t m => Day -> m (Event t ChangeDate)
+sumOfDay uDay = do
   let (y0, m, d) = toGregorian uDay
       y = fromIntegral y0 `mod` 100
-  elAttr "div" (fromList [("style", "text-align:center")]) $ do
-    el "h1" $ text "Exponential sum of the day"
-    sumOfTheDay (y,m,d)
+      dayWidget = sumOfTheDay (y,m,d)
+  el "div" dayWidget
 
-mainSumOfDayWidget :: forall t m. MonadWidget t m => m ()
-mainSumOfDayWidget = do
+sumOfDayWidget :: MonadWidget t m => m ()
+sumOfDayWidget = do
   now <- liftIO getCurrentTime 
   let today = utctDay now
   rec 
-      dDay :: Dynamic t Day <- foldDyn (\(DateChange change) d -> addDays change d) today dayChange
-      let eDay :: Event t Day
-          eDay = updated dDay
-          eSum :: Event t (m (Event t ChangeDate))
-          eSum = fmap sumOfDayWidget eDay
-      dynSumEvent :: Dynamic t (Event t ChangeDate) <- widgetHold (sumOfDayWidget today) eSum
-      let dayChange :: Event t ChangeDate
-          dayChange = switch $ current dynSumEvent
+      dDay <- foldDyn (\(change) d -> addDays change d) today dayChange
+      let eDay = updated dDay
+          eSum = fmap sumOfDay eDay
+      dynSumEvent <- widgetHold (sumOfDay today) eSum
+      let dayChange = switch $ current dynSumEvent
   return ()
 
+header :: MonadWidget t m => m ()
+header = text "Exponential sum of the day"
 
-main = mainWidget mainSumOfDayWidget
+footer :: MonadWidget t m => m ()
+footer = do
+    text "For more explanation: "
+    elAttr "a" ("href" =: "https://www.johndcook.com/blog/2017/11/02/recent-exponential-sums/") $ text "Recent exponential sums"
+
+main = mainWidgetInElementById "main-wrapper" $ do 
+    el "header" header
+    el "article" sumOfDayWidget
+    el "footer" footer
 
 -- The svg attributes needed to display a line segment.
 lineAttrs :: Float -> Segment -> Map Text Text
