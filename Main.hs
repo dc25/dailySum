@@ -24,8 +24,10 @@ toAngle (y,m,d) n =
 toPoint :: Float -> Point
 toPoint angle = (cos angle,sin angle)
 
-finiteTicks :: MonadWidget t m => UTCTime ->Int -> m (Event t TickInfo)
-finiteTicks now limit = do
+-- Generate ticks until limit reached 
+limitedTicks :: MonadWidget t m => Int -> m (Event t TickInfo)
+limitedTicks limit = do
+  now <- liftIO getCurrentTime 
   eTick <- tickLossy 0.01 now
   dCount <- count eTick
   dLimit <- holdUniqDyn $ fmap (limit<) dCount 
@@ -38,8 +40,6 @@ type ChangeDate = Integer
 
 sumOfTheDay :: MonadWidget t m => (Int, Int, Int) -> m (Event t ChangeDate)
 sumOfTheDay (y,m,d) = do
-  now <- liftIO getCurrentTime 
-
   let segmentCount = lcm (lcm m d) y
       ymdAngle = toAngle (y,m,d)
       vectors = fmap (toPoint.ymdAngle) [0..segmentCount] 
@@ -52,8 +52,9 @@ sumOfTheDay (y,m,d) = do
 
       width = xMax -xMin
       height = yMax -yMin
-  
-  eTick <- finiteTicks now segmentCount
+ 
+  -- Generate one event per segment to be displayed.
+  eTick <- limitedTicks segmentCount
 
   -- A dynamically updating angle (with counter)
   dAngle <- foldDyn (\_ (c, angle) -> (c+1, ymdAngle c)) (0, 0) eTick
