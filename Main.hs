@@ -107,7 +107,8 @@ sumOfDayWidget = do
       dDay <- foldDyn (\(change) d -> addDays change d) today dayChange
       let eDay = updated dDay
           eSum = fmap sumOfDay eDay
-      dynSumEvent <- widgetHold (sumOfDay today) eSum
+          todaySum = sumOfDay today
+      dynSumEvent <- widgetHold todaySum eSum
       let dayChange = switch $ current dynSumEvent
   return ()
 
@@ -131,7 +132,7 @@ lineAttrs width ((x1,y1), (x2,y2)) =
            , ( "y1",    pack $ show y1)
            , ( "x2",    pack $ show x2)
            , ( "y2",    pack $ show y2)
-           , ( "style", "stroke:midnightblue")
+           , ( "style", "stroke:red")
            , ( "stroke-width", pack $ show width)
            ]    
 
