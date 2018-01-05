@@ -67,10 +67,17 @@ sumOfTheDay (y,m,d) = do
   let ePath = updated dPath
 
   -- A dynamically updating indexed line segment
+  -- The index is for listHoldWithKey
   dLine <- foldDyn (\p (index, (p0, p1))  -> (index+1, (p1,p)) ) (0, ((0,0), (0,0))) ePath
 
+  
+  -- A dynamically updating map from index to Maybe line. 
+  -- The map will always have only one entry - the line to be
+  -- added to the displayed segments.
   let dLineMap = fmap (\(i, l) -> fromList [(i, Just l)]) dLine
 
+  -- Change to events and drop the first one (the initial value 
+  -- introduced by foldDyn)
   eLineMap <- tailE $ updated dLineMap
 
   let sz = 450
